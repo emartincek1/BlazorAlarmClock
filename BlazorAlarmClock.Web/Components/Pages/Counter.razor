@@ -7,10 +7,18 @@
 <h1 class="@clockClass">@Time</h1>
 <button class="btn btn-primary" @onclick="ChangeColorReset">Change Clock Color</button>
 <hr />
-<form @onsubmit="ChangeColorReset">
-    <input />
-    <button class="btn btn-secondary">Change Timer</button>
+<form @onsubmit="Submit">
+    <InputNumber @bind-Value="newDelayTime"/>
+    <button class="btn btn-secondary" type="submit">Change Timer (seconds)</button>
 </form>
+<hr />
+<form @onsubmit="SubmitAlarm">
+    <InputNumber @bind-Value="alarmTimeHour" />
+    <InputNumber @bind-Value="alarmTimeMinute" />
+    <InputNumber @bind-Value="alarmTimeSecond" />
+    <button class="btn btn-secondary" type="submit">Set Alarm</button>
+</form>
+<button @onclick="changeSnooze" class="btn btn-warning">Snooze</button>
 
 @code {
 
@@ -38,9 +46,13 @@
 
     private string clockClass = "clock";
 
+    private int delayTime = 10000;
+
+    private int newDelayTime;
+
     async private void ChangeClockColor()
     {
-        await Task.Delay(10000);
+        await Task.Delay(delayTime);
         clockClass = "redClock";
     }
 
@@ -49,6 +61,57 @@
         clockClass = "clock";
         ChangeClockColor();
 
+    }
+
+    private void Submit()
+    {
+        delayTime = newDelayTime * 1000;
+    }
+
+    private int alarmTimeHour;
+    private int alarmTimeMinute;
+    private int alarmTimeSecond;
+    private bool snooze = false;
+    private Timer alarmChecker;
+    private DateTime alarm;
+    private string stringAlarm;
+
+    private void SubmitAlarm()
+    {
+        alarm = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, alarmTimeHour, alarmTimeMinute, alarmTimeSecond);
+        stringAlarm = alarm.ToString("h:mm:ss tt");
+        snooze = false;
+        alarmChecker = new System.Threading.Timer(async _ =>
+        {
+            CheckAlarm();
+        }, null, 0, 1000);
+
+    }
+
+    private void CheckAlarm()
+    {
+        if (stringAlarm == Time)
+        {
+            AlertAlarmClock();
+        }
+    }
+
+    async private void AlertAlarmClock()
+    {
+        while(!snooze)
+        {
+            clockClass = "clock";
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(1000);
+            clockClass = "redClock";
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void changeSnooze()
+    {
+        snooze = true;
+        clockClass = "redClock";
     }
 
     public void Dispose()
