@@ -1,0 +1,58 @@
+﻿@page "/counter"
+@rendermode InteractiveServer
+@implements IDisposable
+
+<PageTitle>Clock</PageTitle>
+
+<h1 class="@clockClass">@Time</h1>
+<button class="btn btn-primary" @onclick="ChangeColorReset">Change Clock Color</button>
+<hr />
+<form @onsubmit="ChangeColorReset">
+    <input />
+    <button class="btn btn-secondary">Change Timer</button>
+</form>
+
+@code {
+
+    private string UpdateTime()
+    {
+        return DateTime.Now.ToString("h:mm:ss tt");
+    }
+
+    private string Time = DateTime.Now.ToString("h:mm:ss tt");
+
+    private Timer timer;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        timer = new System.Threading.Timer(async _ =>
+        {
+            Time = UpdateTime();
+            await InvokeAsync(StateHasChanged);
+        }, null, 0, 1000);
+
+        ChangeClockColor();
+    }
+
+    private string clockClass = "clock";
+
+    async private void ChangeClockColor()
+    {
+        await Task.Delay(10000);
+        clockClass = "redClock";
+    }
+
+    private void ChangeColorReset()
+    {
+        clockClass = "clock";
+        ChangeClockColor();
+
+    }
+
+    public void Dispose()
+    {
+        timer?.Dispose();
+    }
+}
