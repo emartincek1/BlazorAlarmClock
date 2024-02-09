@@ -47,9 +47,11 @@
             }
         }
 
-        public void AddAlarm(Alarm newAlarm)
+        public Alarm AddAlarm(int hour, int minute, int second)
         {
+            Alarm newAlarm = new Alarm(hour, minute, second);
             alarms.Add(newAlarm);
+            return newAlarm;
         }
 
         public void AcknowledgeAlarm()

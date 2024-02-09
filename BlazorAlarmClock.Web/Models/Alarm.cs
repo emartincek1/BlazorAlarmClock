@@ -5,6 +5,7 @@
         public Alarm(int hour, int minute, int second)
         {
             Time = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, hour, minute, second);
+            Enabled = true;
         }
 
         public bool IsActive
