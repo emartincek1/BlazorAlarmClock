@@ -4,13 +4,80 @@
 
 <PageTitle>Clock</PageTitle>
 
-<h1>@clock.Time.ToLongTimeString()</h1>
+@if (clock.ActiveAlarm == true)
+{
+    <h1 class="text-danger">@clock.Time.ToLongTimeString()</h1>
+}
+else
+{
+    <h1 class="text-primary">@clock.Time.ToLongTimeString()</h1>
+}
+<h2>Set Alarm</h2>
+<form @onsubmit="SetAlarm">
+    <label>
+        Alarm Hour:
+        <InputNumber @bind-Value="alarmHour" />
+    </label>
+    <label>
+        Alarm Minute:
+        <InputNumber @bind-Value="alarmMinute"/>
+    </label>
+    <label>
+        Alarm Second:
+        <InputNumber @bind-Value="alarmSecond"/>
+    </label>
+    <button class="btn btn-primary" type="submit">Set Alarm</button>
+</form>
+
+<h2>Alarms:</h2>
+<ul>
+    @foreach (var alarm in clock.Alarms)
+    {
+        @if (alarm.IsActive == true)
+        {
+            <li class="text-danger">@alarm.Time.ToLongTimeString()</li>
+        } 
+        else if (alarm.Enabled == true)
+        {
+            <li class="text-primary">@alarm.Time.ToLongTimeString()</li>
+        }
+        else
+        {
+            <li class="text-warning">@alarm.Time.ToLongTimeString()
+                <button class="btn-warning" @onclick="ReEnableAlarm(alarm)">Re Enable</button>
+            </li>
+        }
+        
+    }
+</ul>
+
+<button class="btn btn-secondary" @onclick="AcknowledgeAlarm">AckowledgeAlarm</button>
 
 
 @code {
     public Models.AlarmClock clock = new Models.AlarmClock();
 
     private Timer timer;
+
+    private int alarmHour;
+    private int alarmMinute;
+    private int alarmSecond;
+
+    public void SetAlarm()
+    {
+        clock.AddAlarm(alarmHour, alarmMinute, alarmSecond);
+    }
+
+    public void AcknowledgeAlarm()
+    {
+        clock.AcknowledgeAlarm();
+    }
+
+    public Microsoft.AspNetCore.Components.EventCallback ReEnableAlarm(Alarm alarm)
+    {
+        alarm.ReEnable();
+        return EventCallback.Empty;
+    }
 
     protected override void OnInitialized()
     {

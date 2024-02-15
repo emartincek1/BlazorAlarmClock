@@ -24,6 +24,11 @@
         {
             get; private set;
         }
+        public void ReEnable()
+        {
+            Enabled = true;
+            Time = Time.AddDays(1);
+        }
 
     }
 }
