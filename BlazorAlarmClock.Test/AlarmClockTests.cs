@@ -10,9 +10,9 @@ namespace BlazorAlarmClock.Test
         async public Task Clock_TracksTimeAndUpdates()
         {
             var clock = new AlarmClock();
-            Assert.AreEqual(DateTime.Now.ToShortTimeString(), clock.Time.ToShortTimeString());
+            Assert.AreEqual(clock.Time.ToLongTimeString(), DateTime.Now.ToLongTimeString());
             await Task.Delay(2000);
-            Assert.AreEqual(DateTime.Now.ToShortTimeString(), clock.Time.ToShortTimeString());
+            Assert.AreEqual(clock.Time.ToLongTimeString(), DateTime.Now.ToLongTimeString());
         }
 
         [TestMethod]
@@ -29,6 +29,7 @@ namespace BlazorAlarmClock.Test
          async public Task Clock_ActiveAlarm()
         {
             var clock = new AlarmClock();
+            Assert.AreEqual(false, clock.ActiveAlarm);
             clock.AddAlarm(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second + 1);
             await Task.Delay(2000);
             Assert.AreEqual(true, clock.ActiveAlarm);
