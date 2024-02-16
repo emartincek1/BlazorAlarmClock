@@ -44,7 +44,7 @@ else
         else
         {
             <li class="text-warning">@alarm.Time.ToLongTimeString()
-                <button class="btn-warning" @onclick="ReEnableAlarm(alarm)">Re Enable</button>
+                <button class="btn-warning" @onclick="() => alarm.ReEnable()">Re Enable</button>
             </li>
         }
         
@@ -73,12 +73,6 @@ else
         clock.AcknowledgeAlarm();
     }
 
-    public Microsoft.AspNetCore.Components.EventCallback ReEnableAlarm(Alarm alarm)
-    {
-        alarm.ReEnable();
-        return EventCallback.Empty;
-    }
-
     protected override void OnInitialized()
     {
         base.OnInitialized();
@@ -86,7 +80,7 @@ else
         timer = new System.Threading.Timer(async _ =>
         {
             await InvokeAsync(StateHasChanged);
-        }, null, 0, 1000);
+        }, null, 0, 100);
     }
 
     public void Dispose()
