@@ -1,4 +1,6 @@
-﻿namespace BlazorAlarmClock.Web.Models
+﻿using System.Text.Json.Serialization;
+
+namespace BlazorAlarmClock.Web.Models
 {
     public class Alarm
     {
@@ -7,6 +9,9 @@
             Time = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, hour, minute, second);
             Enabled = true;
         }
+
+        [JsonConstructor]
+        public Alarm() {}
 
         public bool IsActive
         {
@@ -22,7 +27,7 @@
 
         public DateTime Time
         {
-            get; private set;
+            get; set;
         }
         public void ReEnable()
         {

@@ -1,6 +1,7 @@
 ﻿@page "/alarmclock"
 @rendermode InteractiveServer
 @implements IDisposable
+@inject ILocalStorageService _localstorage;
 
 <PageTitle>Clock</PageTitle>
 
@@ -51,7 +52,7 @@ else
     }
 </ul>
 
-<button class="btn btn-secondary" @onclick="AcknowledgeAlarm">AckowledgeAlarm</button>
+<button class="btn btn-secondary" @onclick="() => clock.AcknowledgeAlarm()">AckowledgeAlarm</button>
 
 
 @code {
@@ -66,11 +67,7 @@ else
     public void SetAlarm()
     {
         clock.AddAlarm(alarmHour, alarmMinute, alarmSecond);
-    }
-
-    public void AcknowledgeAlarm()
-    {
-        clock.AcknowledgeAlarm();
+        _localstorage.SetItemAsync("alarms", clock.Alarms);
     }
 
     protected override void OnInitialized()
@@ -81,6 +78,19 @@ else
         {
             await InvokeAsync(StateHasChanged);
         }, null, 0, 100);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var localAlarms = await _localstorage.GetItemAsync<List<Alarm>>("alarms");
+            if (localAlarms != null)
+            {
+                clock.Alarms = localAlarms;
+                StateHasChanged();
+            }
+        }
     }
 
     public void Dispose()

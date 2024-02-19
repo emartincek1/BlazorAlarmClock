@@ -10,7 +10,7 @@
 
         public AlarmClock() 
         {
-            timer = new System.Threading.Timer(async _ =>
+            timer = new System.Threading.Timer(_ =>
             {
                 Time = DateTime.Now;
                 isAlarm();
@@ -22,6 +22,7 @@
         public List<Alarm> Alarms 
         {
             get => alarms;
+            set => alarms = value;
         }
 
         public DateTime Time
