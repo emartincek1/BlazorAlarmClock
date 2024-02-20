@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @implements IDisposable
 @inject ILocalStorageService _localstorage;
+@inject Models.AlarmClock clock;
 
 <PageTitle>Clock</PageTitle>
 
@@ -56,13 +57,13 @@ else
 
 
 @code {
-    public Models.AlarmClock clock = new Models.AlarmClock();
-
     private Timer timer;
 
     private int alarmHour;
     private int alarmMinute;
     private int alarmSecond;
+    private bool playing;
+    private string track = "Data/alarmSound.mp3";
 
     public void SetAlarm()
     {
