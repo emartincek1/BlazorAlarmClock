@@ -1,4 +1,5 @@
 using BlazorAlarmClock.Web.Components;
+using BlazorAlarmClock.Web.Components.Pages;
 using Blazored.LocalStorage;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddBlazoredLocalStorage();
+
+builder.Services.AddSingleton<BlazorAlarmClock.Web.Models.AlarmClock>();
 
 var app = builder.Build();
 
