@@ -1,8 +1,10 @@
 using BlazorAlarmClock.Web.Components;
 using BlazorAlarmClock.Web.Components.Pages;
 using Blazored.LocalStorage;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddJsonFile("appsettings.json", false, false);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -11,6 +13,9 @@ builder.Services.AddRazorComponents()
 builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddSingleton<BlazorAlarmClock.Web.Models.AlarmClock>();
+
+
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.Configuration.GetSection("BaseAddress").Value) });
 
 var app = builder.Build();
 
