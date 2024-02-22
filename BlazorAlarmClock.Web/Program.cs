@@ -1,6 +1,7 @@
 using BlazorAlarmClock.Web.Components;
 using BlazorAlarmClock.Web.Components.Pages;
 using Blazored.LocalStorage;
+using KristofferStrube.Blazor.MediaCaptureStreams;
 using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,8 @@ builder.Services.AddSingleton<BlazorAlarmClock.Web.Models.AlarmClock>();
 
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.Configuration.GetSection("BaseAddress").Value) });
+
+builder.Services.AddMediaDevicesService();
 
 var app = builder.Build();
 

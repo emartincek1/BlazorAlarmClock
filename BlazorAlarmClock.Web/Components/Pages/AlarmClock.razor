@@ -4,6 +4,9 @@
 @inject ILocalStorageService _localstorage;
 @inject Models.AlarmClock clock;
 
+@inject IJSRuntime JSRuntime
+@inject HttpClient HttpClient
+
 <PageTitle>Clock</PageTitle>
 
 @if (clock.ActiveAlarm == true)
@@ -62,8 +65,16 @@ else
     private int alarmHour;
     private int alarmMinute;
     private int alarmSecond;
+
     private bool playing;
     private string track = "Data/alarmSound.mp3";
+    private bool currentTrackLoaded = false;
+    private double trackDuration;
+    private AudioContext context = default!;
+    private AudioDestinationNode destination = default!;
+    private AudioBufferSourceNode currentAudioBufferNode = default!;
+    private AudioBuffer currentAudioBuffer = default!;
+
 
     public void SetAlarm()
     {
@@ -99,4 +110,23 @@ else
         timer?.Dispose();
     }
 
+
+    public async Task EnsureInitialized()
+    {
+        if (context is { }) return;
+
+        context = await AudioContext.CreateAsync(JSRuntime);
+        destination = await context.GetDestinationAsync();
+    }
+
+    public async Task EnsureCurrentTrackLoaded()
+    {
+        if (currentTrackLoaded) return;
+            
+        byte[] trackData = await HttpClient.GetByteArrayAsync(track);
+        await context.DecodeAudioDataAsync(trackData, (audioBuffer) => { currentAudioBuffer = audioBuffer; return Task.CompletedTask; });
+        trackDuration = await currentAudioBuffer.GetDurationAsync();
+
+        currentTrackLoaded = true;
+    }
 }
