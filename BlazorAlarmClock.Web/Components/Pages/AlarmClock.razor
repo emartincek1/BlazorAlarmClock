@@ -1,4 +1,5 @@
 ﻿@page "/alarmclock"
+@using BlazorAlarmClock.Web.Models.Audio
 @rendermode InteractiveServer
 @implements IDisposable
 @inject ILocalStorageService _localstorage;
@@ -58,6 +59,14 @@ else
 
 <button class="btn btn-secondary" @onclick="() => clock.AcknowledgeAlarm()">AckowledgeAlarm</button>
 
+@if (playing)
+{
+    <button class="media-control" aria-label="Pause" @onclick=Pause>⏸</button>
+}
+else
+{
+    <button class="media-control" aria-label="Play" @onclick=Play>⏯</button>
+}
 
 @code {
     private Timer timer;
@@ -67,14 +76,21 @@ else
     private int alarmSecond;
 
     private bool playing;
-    private string track = "Data/alarmSound.mp3";
+    private int currentTrack = 0;
     private bool currentTrackLoaded = false;
     private double trackDuration;
+    private double offset;
+    private double playTime;
+    private double startTime;
+    private double? pauseTime;
+    private int interactions;
     private AudioContext context = default!;
     private AudioDestinationNode destination = default!;
     private AudioBufferSourceNode currentAudioBufferNode = default!;
     private AudioBuffer currentAudioBuffer = default!;
-
+    private List<string> tracks = new() {
+        "Data/alarmSound.mp3",
+    };
 
     public void SetAlarm()
     {
@@ -123,10 +139,88 @@ else
     {
         if (currentTrackLoaded) return;
             
-        byte[] trackData = await HttpClient.GetByteArrayAsync(track);
+        byte[] trackData = await HttpClient.GetByteArrayAsync(tracks[currentTrack]);
         await context.DecodeAudioDataAsync(trackData, (audioBuffer) => { currentAudioBuffer = audioBuffer; return Task.CompletedTask; });
         trackDuration = await currentAudioBuffer.GetDurationAsync();
 
         currentTrackLoaded = true;
+    }
+
+    public async Task Play()
+    {
+        await EnsureInitialized();
+        if (playing) return;
+        interactions++;
+        await EnsureCurrentTrackLoaded();
+
+        currentAudioBufferNode = await context.CreateBufferSourceAsync();
+        await currentAudioBufferNode.SetBufferAsync(currentAudioBuffer);
+        await currentAudioBufferNode.ConnectAsync(destination);
+        if (pauseTime is null)
+        {
+            await currentAudioBufferNode.StartAsync();
+        }
+        else
+        {
+            await currentAudioBufferNode.StartAsync(when: 0, offset: offset);
+        }
+        startTime = await context.GetCurrentTimeAsync();
+
+        playing = true;
+        var currentInteractions = interactions;
+        while (currentInteractions == interactions)
+        {
+            playTime = await context.GetCurrentTimeAsync() - startTime + offset;
+            StateHasChanged();
+            if (playTime >= trackDuration)
+            {
+                await NextTrack();
+            }
+            await Task.Delay(100);
+        }
+    }
+
+    public async Task Pause()
+    {
+        if (!playing) return;
+        interactions++;
+
+        await currentAudioBufferNode.DisconnectAsync();
+        await currentAudioBufferNode.StopAsync();
+
+        var currentTime = await context.GetCurrentTimeAsync();
+        pauseTime = await context.GetCurrentTimeAsync();
+        if (offset + currentTime - startTime > trackDuration)
+        {
+            offset = 0;
+        }
+        else
+        {
+            offset += currentTime - startTime;
+        }
+
+        playing = false;
+    }
+
+    public Task NextTrack() => SwitchTrack(() => currentTrack = (currentTrack + 1) % tracks.Count);
+
+    private async Task SwitchTrack(Action changeTrack)
+    {
+        await EnsureInitialized();
+
+        var wasPlaying = playing;
+        if (wasPlaying)
+        {
+            await Pause();
+        }
+        changeTrack();
+        currentTrackLoaded = false;
+        await EnsureCurrentTrackLoaded();
+        offset = 0;
+        playTime = 0;
+        if (wasPlaying)
+        {
+            await Play();
+        }
     }
 }
