@@ -2,6 +2,7 @@ using BlazorAlarmClock.Web.Components;
 using BlazorAlarmClock.Web.Components.Pages;
 using Blazored.LocalStorage;
 using KristofferStrube.Blazor.MediaCaptureStreams;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,7 +18,12 @@ builder.Services.AddSingleton<BlazorAlarmClock.Web.Models.AlarmClock>();
 
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.Configuration.GetSection("BaseAddress").Value) });
-
+//var provider = new FileExtensionContentTypeProvider();
+//provider.Mappings.Add(".mp3", "Data");
+//builder.Services.Configure<StaticFileOptions>(options =>
+//{
+//    options.ContentTypeProvider = provider;
+//});
 builder.Services.AddMediaDevicesService();
 
 var app = builder.Build();
@@ -31,7 +37,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseAntiforgery();
 
