@@ -57,7 +57,7 @@ else
     }
 </ul>
 
-<button class="btn btn-secondary" @onclick="() => clock.AcknowledgeAlarm()">AckowledgeAlarm</button>
+<button class="btn btn-secondary" @onclick="@(() => {clock.AcknowledgeAlarm();Pause();})">AckowledgeAlarm</button>
 
 @if (playing)
 {
@@ -101,10 +101,13 @@ else
     protected override void OnInitialized()
     {
         base.OnInitialized();
-
         timer = new System.Threading.Timer(async _ =>
         {
             await InvokeAsync(StateHasChanged);
+            if (clock.ActiveAlarm && !playing)
+            {
+                await Play();
+            }
         }, null, 0, 100);
     }
 
@@ -112,6 +115,8 @@ else
     {
         if (firstRender)
         {
+            await EnsureInitialized();
+
             var localAlarms = await _localstorage.GetItemAsync<List<Alarm>>("alarms");
             if (localAlarms != null)
             {
@@ -148,8 +153,8 @@ else
 
     public async Task Play()
     {
-        await EnsureInitialized();
         if (playing) return;
+        playing = true;
         interactions++;
         await EnsureCurrentTrackLoaded();
 
@@ -166,12 +171,10 @@ else
         }
         startTime = await context.GetCurrentTimeAsync();
 
-        playing = true;
         var currentInteractions = interactions;
         while (currentInteractions == interactions)
         {
             playTime = await context.GetCurrentTimeAsync() - startTime + offset;
-            StateHasChanged();
             if (playTime >= trackDuration)
             {
                 await NextTrack();
@@ -183,6 +186,7 @@ else
     public async Task Pause()
     {
         if (!playing) return;
+        playing = false;
         interactions++;
 
         await currentAudioBufferNode.DisconnectAsync();
@@ -198,8 +202,6 @@ else
         {
             offset += currentTime - startTime;
         }
-
-        playing = false;
     }
 
     public Task NextTrack() => SwitchTrack(() => currentTrack = (currentTrack + 1) % tracks.Count);
